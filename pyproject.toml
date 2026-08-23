@@ -1,0 +1,58 @@
+[project]
+name = "tmci-cli"
+version = "1.0.0"
+description = "tmci CLI: command line client for the TMC Institute LMS (lms.tmci.uz)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Isfandiyor Baxtiyorov" }]
+keywords = ["cli", "lms", "tmci", "scraper", "university"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Education",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Education",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "httpx>=0.28.1",
+    "beautifulsoup4>=4.12.0",
+    "rich>=13.7.0",
+    "playwright>=1.45.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Just-Bax/tmci-cli"
+Repository = "https://github.com/Just-Bax/tmci-cli"
+Issues = "https://github.com/Just-Bax/tmci-cli/issues"
+
+[project.scripts]
+tmci = "tmci.cli.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tmci"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+pythonpath = ["tests"]
