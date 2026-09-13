@@ -62,6 +62,9 @@ The installer fetches [uv](https://docs.astral.sh/uv/), which supplies its own P
 installs `tmci` into an isolated environment and downloads the browser used for signing in
 (about 150MB, once).
 
+If that step is skipped or interrupted, `tmci setup` does it, and `tmci login`
+fetches it itself rather than failing.
+
 <details>
 <summary>Already have Python tooling?</summary>
 

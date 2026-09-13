@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -35,18 +36,7 @@ def interactive_login(base_url: str = BASE_URL, timeout_ms: int = LOGIN_WAIT_MS)
 
     base_url = base_url.rstrip("/")
     with sync_playwright() as p:
-        try:
-            context = p.chromium.launch_persistent_context(
-                user_data_dir=str(browser_profile_dir()),
-                headless=False,
-                args=["--no-first-run", "--no-default-browser-check"],
-            )
-        except Exception as exc:
-            if _looks_like_missing_browser(exc):
-                raise LoginFailed(
-                    "Chromium is not installed for Playwright.\nRun: playwright install chromium"
-                ) from exc
-            raise LoginFailed(f"Could not start the browser: {exc}") from exc
+        context = _launch(p)
 
         try:
             page = context.pages[0] if context.pages else context.new_page()
@@ -71,6 +61,38 @@ def interactive_login(base_url: str = BASE_URL, timeout_ms: int = LOGIN_WAIT_MS)
     if not cookies:
         raise LoginFailed("Signed in, but no session cookie was issued by the LMS.")
     return cookies
+
+
+def _launch(p: Any, headless: bool = False) -> Any:
+    options = {
+        "user_data_dir": str(browser_profile_dir()),
+        "headless": headless,
+        "args": ["--no-first-run", "--no-default-browser-check"],
+    }
+    try:
+        return p.chromium.launch_persistent_context(**options)
+    except Exception as exc:
+        if not _looks_like_missing_browser(exc):
+            raise LoginFailed(f"Could not start the browser: {exc}") from exc
+        _fetch_browser()
+
+    try:
+        return p.chromium.launch_persistent_context(**options)
+    except Exception as exc:
+        raise LoginFailed(f"Could not start the browser: {exc}") from exc
+
+
+def _fetch_browser() -> None:
+    """Download the browser mid-login, rather than sending the user away.
+
+    The old advice, "playwright install chromium", names a command the user does
+    not have: the tool install exposes the tmci entry point and nothing else.
+    """
+    if not install_chromium():
+        raise LoginFailed(
+            "The sign-in browser could not be downloaded.\n"
+            "Check your connection, then run: tmci setup"
+        )
 
 
 def _looks_like_missing_browser(exc: Exception) -> bool:
@@ -112,8 +134,36 @@ def _browsers_root() -> Path:
     return Path.home() / ".cache" / "ms-playwright"
 
 
+def _pinned_builds() -> list[str]:
+    """The browser directories this Playwright expects, from its own manifest.
+
+    Playwright pins a build number per version, and the marker file is written
+    only once a download finishes.
+    """
+    import playwright
+
+    manifest = Path(playwright.__file__).parent / "driver" / "package" / "browsers.json"
+    entries = json.loads(manifest.read_text(encoding="utf-8"))["browsers"]
+    return [
+        f"{entry['name'].replace('-', '_')}-{entry['revision']}"
+        for entry in entries
+        if entry["name"].startswith("chromium") and entry.get("installByDefault")
+    ]
+
+
 def browser_is_installed() -> bool:
-    """Look for the unpacked browser on disk. Asking Playwright itself would
-    start its driver, which prints teardown noise on a plain status check."""
+    """Whether every browser build this Playwright pins is on disk and complete.
+
+    Matching the directory name alone accepts a chromium left behind by some
+    other project, which sits in the same place under a different build number
+    and cannot launch. That reported ready here while the launch failed, so
+    'tmci setup' sent the user to 'tmci setup'. An unreadable manifest counts as
+    missing: installing again is harmless, claiming a browser that will not
+    start is not.
+    """
     root = _browsers_root()
-    return root.is_dir() and any(root.glob("chromium*"))
+    try:
+        wanted = _pinned_builds()
+    except Exception:
+        return False
+    return bool(wanted) and all((root / name / "INSTALLATION_COMPLETE").exists() for name in wanted)

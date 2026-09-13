@@ -1,6 +1,6 @@
 [project]
 name = "tmci-cli"
-version = "1.0.0"
+version = "1.0.1"
 description = "tmci CLI: command line client for the TMC Institute LMS (lms.tmci.uz)"
 readme = "README.md"
 requires-python = ">=3.11"
