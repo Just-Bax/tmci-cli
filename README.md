@@ -4,6 +4,8 @@
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#install)
 
+[Install](#install) | [Sign in](#sign-in) | [Browse](#browse) | [Download](#download) | [Settings](#settings) | [Exit codes](#exit-codes) | [Use from an AI agent](#use-from-an-ai-agent) | [Contributing](#contributing)
+
 Command line client for the TMC Institute LMS at `lms.tmci.uz`.
 
 Installs as the package `tmci-cli` and gives you a `tmci` command.
@@ -275,6 +277,9 @@ module per command group.
 Tests use recorded LMS payloads and never touch the network, so `pytest` works offline.
 If the LMS markup changes, add the new shape to `tests/conftest.py` alongside the existing
 one rather than replacing it.
+
+The wordmark, mark, app icon, colors and artwork are in `brand/`; open `brand/index.html`.
+They are this project's own and use none of TMC Institute's logos.
 
 ## License
 
